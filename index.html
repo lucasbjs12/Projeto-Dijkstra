@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Caminho mais barato</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    input, select, button { display: block; width: 100%; margin-bottom: 10px; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Caminho mais barato</h1>
+    <form id="formBusca">
+      <label for="origem">Capital de Origem:</label>
+      <input list="capitais" id="origem" name="origem">
+      <label for="destino">Capital de Destino:</label>
+      <input list="capitais" id="destino" name="destino">
+      <label for="precoCombustivel">Preço do Combustível:</label>
+      <input type="number" id="precoCombustivel" name="precoCombustivel" step="0.01">
+      <label for="autonomia">Autonomia (km/l):</label>
+      <input type="number" id="autonomia" name="autonomia" step="0.01">
+      <button type="submit">Buscar Caminho Mais Barato</button>
+    </form>
+    <datalist id="capitais">
+      <!-- Os valores serão preenchidos dinamicamente -->
+    </datalist>
+    <div id="resultado"></div>
+  </div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch("/capitais.json")
+        .then(response => response.json())
+        .then(capitais => {
+          const datalist = document.getElementById("capitais");
+          capitais.forEach(capital => {
+            const [nome] = Object.keys(capital);
+            const option = document.createElement("option");
+            option.value = nome;
+            datalist.appendChild(option);
+          });
+        });
+
+      document.getElementById("formBusca").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        fetch("/buscar", {
+          method: "POST",
+          body: new URLSearchParams(formData)
+        })
+          .then(response => response.json())
+          .then(data => {
+            const resultadoDiv = document.getElementById("resultado");
+            if (data.error) {
+              resultadoDiv.textContent = data.error;
+            } else {
+              resultadoDiv.textContent = `Caminho: ${data.caminho.join(" -> ")}\nCusto Total: R$${data.custo.toFixed(2)}`;
+            }
+          });
+      });
+    });
+  </script>
+</body>
+</html>
